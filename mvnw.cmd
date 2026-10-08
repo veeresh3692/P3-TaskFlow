@@ -17,14 +17,14 @@ if not "%JAVA_HOME%"=="" (
 
 set "MAVEN_OPTS=--enable-native-access=ALL-UNNAMED %MAVEN_OPTS%"
 
-where mvn >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    call mvn %*
+if exist "%USERPROFILE%\.tools\apache-maven-3.9.6\bin\mvn.cmd" (
+    "%USERPROFILE%\.tools\apache-maven-3.9.6\bin\mvn.cmd" %*
     exit /b %ERRORLEVEL%
 )
 
-if exist "%USERPROFILE%\.tools\apache-maven-3.9.6\bin\mvn.cmd" (
-    call "%USERPROFILE%\.tools\apache-maven-3.9.6\bin\mvn.cmd" %*
+where mvn >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    mvn %*
     exit /b %ERRORLEVEL%
 )
 
