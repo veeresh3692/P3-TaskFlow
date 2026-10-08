@@ -1,0 +1,33 @@
+# Target and build directories
+target/
+**/target/
+build/
+**/build/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# Environment files
+.env
+!.env.example
+
+# Maven wrapper jar if desired, but we can keep wrapper
+.mvn/wrapper/maven-wrapper.jar
