@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # =========================================================================
+  # 1. PostgreSQL Database for Monolith
+  # =========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskflow-monolith-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-taskflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-taskflow_secret}
+      POSTGRES_DB: ${DB_NAME:-taskflow}
+    volumes:
+      - monolith_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-taskflow} -d ${DB_NAME:-taskflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - monolith-network
+
+  # =========================================================================
+  # 2. Monolith Backend Service (Spring Boot 3.3.4 + Flyway Migrations)
+  # =========================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: taskflow-monolith-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-taskflow}
+      DB_USERNAME: ${DB_USERNAME:-taskflow}
+      DB_PASSWORD: ${DB_PASSWORD:-taskflow_secret}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monolith-network
+
+  # =========================================================================
+  # 3. React Frontend + Nginx Monolith Reverse Proxy
+  # =========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taskflow-monolith-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend/nginx.monolith.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - monolith-network
+
+volumes:
+  monolith_pgdata:
+    driver: local
+
+networks:
+  monolith-network:
+    driver: bridge
